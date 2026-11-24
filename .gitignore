@@ -1,0 +1,27 @@
+# Gradle / Kotlin
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+*.class
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Claves y credenciales (no subir nunca)
+*.jks
+*.keystore
+google-services.json
+secrets.properties
+
+# SO
+.DS_Store
+Thumbs.db
+
+# Base de datos local de pruebas
+*.db

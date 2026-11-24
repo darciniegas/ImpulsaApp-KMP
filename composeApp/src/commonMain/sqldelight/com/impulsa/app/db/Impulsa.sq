@@ -1,0 +1,98 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Esquema de la base de datos de Impulsa (SQLDelight / SQLite)
+--  Compartido entre Android y Desktop.
+-- ═══════════════════════════════════════════════════════════════
+
+CREATE TABLE AsesorEntity (
+    id        TEXT NOT NULL PRIMARY KEY,
+    nombre    TEXT NOT NULL,
+    correo    TEXT NOT NULL,
+    telefono  TEXT NOT NULL,
+    ventas    INTEGER NOT NULL,
+    ingresos  REAL NOT NULL,
+    comision  REAL NOT NULL,
+    meta      REAL NOT NULL
+);
+
+CREATE TABLE VentaEntity (
+    id         TEXT NOT NULL PRIMARY KEY,
+    cliente    TEXT NOT NULL,
+    concepto   TEXT NOT NULL,
+    valor      REAL NOT NULL,
+    asesor     TEXT NOT NULL,
+    formaPago  TEXT NOT NULL,
+    fecha      TEXT NOT NULL,
+    nota       TEXT NOT NULL DEFAULT '',
+    -- Orden de inserción: la venta más reciente tiene el valor más alto
+    orden      INTEGER NOT NULL
+);
+
+-- Pares clave/valor: sesión activa y preferencias del usuario
+CREATE TABLE ConfigEntity (
+    clave  TEXT NOT NULL PRIMARY KEY,
+    valor  TEXT NOT NULL
+);
+
+-- ───────────── Asesores ─────────────
+selectAsesores:
+SELECT * FROM AsesorEntity ORDER BY id;
+
+selectAsesorPorId:
+SELECT * FROM AsesorEntity WHERE id = ?;
+
+selectAsesorPorNombre:
+SELECT * FROM AsesorEntity WHERE nombre = ?;
+
+selectAsesorPorCorreo:
+SELECT * FROM AsesorEntity WHERE lower(correo) = lower(?);
+
+contarAsesores:
+SELECT COUNT(*) FROM AsesorEntity;
+
+insertarAsesor:
+INSERT OR REPLACE INTO AsesorEntity(id, nombre, correo, telefono, ventas, ingresos, comision, meta)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+ajustarAcumulados:
+UPDATE AsesorEntity
+SET ventas = ventas + ?, ingresos = ingresos + ?, comision = comision + ?
+WHERE nombre = ?;
+
+-- ───────────── Ventas ─────────────
+selectVentas:
+SELECT * FROM VentaEntity ORDER BY orden DESC;
+
+selectVentaPorId:
+SELECT * FROM VentaEntity WHERE id = ?;
+
+selectVentasDe:
+SELECT * FROM VentaEntity WHERE asesor = ? ORDER BY orden DESC;
+
+selectIdsVentas:
+SELECT id FROM VentaEntity;
+
+insertarVenta:
+INSERT INTO VentaEntity(id, cliente, concepto, valor, asesor, formaPago, fecha, nota, orden)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(orden), 0) + 1 FROM VentaEntity));
+
+insertarVentaConOrden:
+INSERT OR REPLACE INTO VentaEntity(id, cliente, concepto, valor, asesor, formaPago, fecha, nota, orden)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+actualizarVenta:
+UPDATE VentaEntity
+SET cliente = ?, concepto = ?, valor = ?, formaPago = ?, fecha = ?, nota = ?
+WHERE id = ?;
+
+eliminarVenta:
+DELETE FROM VentaEntity WHERE id = ?;
+
+-- ───────────── Configuración / sesión ─────────────
+selectConfig:
+SELECT valor FROM ConfigEntity WHERE clave = ?;
+
+upsertConfig:
+INSERT OR REPLACE INTO ConfigEntity(clave, valor) VALUES (?, ?);
+
+eliminarConfig:
+DELETE FROM ConfigEntity WHERE clave = ?;
